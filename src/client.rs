@@ -122,7 +122,17 @@ async fn ws_incoming_messages(
 
 impl HassClient {
     pub async fn new(url: &str) -> HassResult<Self> {
-        let (wsclient, _) = connect_async(url).await?;
+        let (mut wsclient, _) = connect_async(url).await?;
+        let auth_req = match tokio::time::timeout(std::time::Duration::from_secs(15), wsclient.next()).await {
+            Ok(Some(Ok(auth_req))) => {
+                auth_req
+            }
+            Ok(Some(Err(err))) => return Err(HassError::Generic(err.to_string())),
+            Ok(None) => return Err(HassError::Generic("Connection timed out".to_string())),
+            Err(_) => return Err(HassError::Generic("Connection timed out".to_string())),
+        };
+        println!("Got auth_req: {auth_req:#?}");
+
         let (mut sink, stream) = wsclient.split();
         let (message_tx, mut message_rx) = channel(20);
 
