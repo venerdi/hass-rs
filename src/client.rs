@@ -131,7 +131,7 @@ impl HassClient {
             Ok(None) => return Err(HassError::Generic("Connection timed out".to_string())),
             Err(_) => return Err(HassError::Generic("Connection timed out".to_string())),
         };
-        println!("Got auth_req: {auth_req:#?}");
+        log::info!("Got auth_req: {auth_req:#?}");
 
         let (mut sink, stream) = wsclient.split();
         let (message_tx, mut message_rx) = channel(20);
